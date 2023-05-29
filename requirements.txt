@@ -1,0 +1,3 @@
+langchain
+openai
+elasticsearch == 8.7.0
