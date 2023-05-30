@@ -1,7 +1,9 @@
+import os
+import env
 from elasticsearch import Elasticsearch
 
 # Elasticsearchエンドポイント
-es = Elasticsearch("http://localhost:9200")
+es = Elasticsearch(os.environ.get('ELASTICSEARCH_URL'))
 
 # testdocument
 es.index(index = "test",
