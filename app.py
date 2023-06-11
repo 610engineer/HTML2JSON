@@ -1,42 +1,63 @@
 
 # -*- coding: utf-8 -*-
+import glob
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.vectorstores import ElasticVectorSearch
 from elasticsearch_func import add_document
 from langchain.document_loaders import UnstructuredHTMLLoader, DirectoryLoader
+from html2vectorstore import html_loader
 
 import os
 import env
 
 def main():
 
+    print("INPUT FOLDER PATH")
+    folder_path = input()
 
-    # test
+    # test PATH
+    folder_path = os.environ.get('TEST_PATH')
+
+    # ログ表示
+    print(folder_path)
+
+    # 読み込むファイルの拡張子を指定
+    types = ("html", "htm")
+    files = []
+
+    # 拡張子の数だけfilesの配列を作成
+    for type in types:
+        files += glob.glob(folder_path + "\*." + type)
+
+    # フォルダの中身を取得
+    for file in files:
+        # ログ表示
+
+        print(file)
+
+        # ファイルの中身がない場合は次のファイルへ
+        f = open(file,  encoding="utf-8").read()
+        # print("F," , f)
+
+        if f == "":
+            continue
+
+        # HTMLLoaderで変換
+        documents = html_loader(file)
+
+        # elasticsearchに入れるために分割
+        text_splitter = CharacterTextSplitter(chunk_size=10000, chunk_overlap=0)
+        docs = text_splitter.split_documents(documents)
+        embeddings = OpenAIEmbeddings()
+
+        # documentをelasticsearchにインサート
+        db = ElasticVectorSearch.from_documents(docs, embeddings, 
+                                                elasticsearch_url=os.environ.get('ELASTICSEARCH_URL'),
+                                                index_name="document_test")
+    
     """
-    loader = UnstructuredHTMLLoader("C:\\Users\\masat\\OneDrive\\デスクトップ\\Workspace\\MQDヘルプ\\HTMLのみ\\64bitOSで利用する場合.html", encoding= "shift-jis")
-    print(loader)
-    documents = loader.load()
-    print(documents)
-
-    text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
-    docs = text_splitter.split_documents(documents)
-    embeddings = OpenAIEmbeddings()
-
-    db = ElasticVectorSearch.from_documents(docs, embeddings, 
-                                            elasticsearch_url=os.environ.get('ELASTICSEARCH_URL'),
-                                            index_name="document_test")
-    print(db)
-    """
-
-    # test
-    loader = DirectoryLoader("C:\\Users\\masat\\OneDrive\\デスクトップ\\Workspace\\MQDhelp\\HTML", glob="**/*.html", )
-    print(loader)
-    documents = loader.load()
-    print(documents)
-
-    embedding = OpenAIEmbeddings()
-    """
+    # クエリ
     elastic_vector_search = ElasticVectorSearch(
         elasticsearch_url="http://localhost:9200",
         index_name="document_test",
@@ -48,6 +69,7 @@ def main():
 
     print("ANSWER", answer[0].page_content)
     """
+    
 
 
 
