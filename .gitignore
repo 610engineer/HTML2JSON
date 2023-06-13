@@ -1,3 +1,5 @@
 env.py
 venv
+converted_files
 __pycache__
+convert_to_utf8_from_shiftJIS.py

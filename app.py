@@ -4,9 +4,10 @@ import glob
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.vectorstores import ElasticVectorSearch
+from convert_to_utf8_from_shiftJIS import convert_html_files
 from elasticsearch_func import add_document
 from langchain.document_loaders import UnstructuredHTMLLoader, DirectoryLoader
-from html2vectorstore import html_loader
+from directory_loader import insert_to_elasticsearch
 
 import os
 import env
@@ -22,40 +23,18 @@ def main():
     # ログ表示
     print(folder_path)
 
-    # 読み込むファイルの拡張子を指定
-    types = ("html", "htm")
-    files = []
+    # 現在のディレクトリを取得
+    cwd = os.getcwd()
 
-    # 拡張子の数だけfilesの配列を作成
-    for type in types:
-        files += glob.glob(folder_path + "\*." + type)
+    # 変換ファイルを保存するディレクトリ
+    target_dir = cwd + "\converted_files"
 
-    # フォルダの中身を取得
-    for file in files:
-        # ログ表示
+    # html/htmファイルをshift-jisからutf-8へ変換
+    convert_html_files(folder_path, target_dir)
 
-        print(file)
+    # html/htmファイルをElasticsearchへ挿入
+    insert_to_elasticsearch(target_dir)
 
-        # ファイルの中身がない場合は次のファイルへ
-        f = open(file,  encoding="utf-8").read()
-        # print("F," , f)
-
-        if f == "":
-            continue
-
-        # HTMLLoaderで変換
-        documents = html_loader(file)
-
-        # elasticsearchに入れるために分割
-        text_splitter = CharacterTextSplitter(chunk_size=10000, chunk_overlap=0)
-        docs = text_splitter.split_documents(documents)
-        embeddings = OpenAIEmbeddings()
-
-        # documentをelasticsearchにインサート
-        db = ElasticVectorSearch.from_documents(docs, embeddings, 
-                                                elasticsearch_url=os.environ.get('ELASTICSEARCH_URL'),
-                                                index_name="document_test")
-    
     """
     # クエリ
     elastic_vector_search = ElasticVectorSearch(
