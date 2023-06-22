@@ -5,7 +5,6 @@ from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.vectorstores import ElasticVectorSearch
 from convert_to_utf8_from_shiftJIS import convert_html_files
-from elasticsearch_func import add_document
 from langchain.document_loaders import UnstructuredHTMLLoader, DirectoryLoader
 from directory_loader import insert_to_elasticsearch
 
@@ -18,7 +17,7 @@ def main():
     folder_path = input()
 
     # test PATH
-    folder_path = os.environ.get('TEST_PATH')
+    # folder_path = os.environ.get('TEST_PATH')
 
     # ログ表示
     print(folder_path)
